@@ -10,7 +10,7 @@
 ## 项目结构
 
 ```
-testMcp/
+Playwright-Framework/
 ├── framework/           # 框架核心
 │   └── utils/           # 工具类
 │       ├── logger.ts    # 日志工具
