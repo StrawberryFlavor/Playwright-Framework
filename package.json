@@ -1,7 +1,7 @@
 {
   "name": "playwright-framework",
   "version": "1.0.0",
-  "description": "",
+  "description": "高级Playwright测试框架，提供增强的日志记录、页面对象模式、智能元素识别和错误自动截图功能",
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
@@ -15,7 +15,17 @@
     "test:dev": "LOG_PRESET=development playwright test",
     "test:prod": "LOG_PRESET=production playwright test"
   },
-  "keywords": [],
+  "keywords": [
+    "playwright",
+    "automation",
+    "testing",
+    "e2e",
+    "page-object-model",
+    "typescript",
+    "logger",
+    "framework",
+    "screenshots"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
