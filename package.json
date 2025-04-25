@@ -1,0 +1,22 @@
+{
+  "name": "testmcp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test-chrome": "playwright test --project=chrome",
+    "test-firefox": "playwright test --project=firefox",
+    "test-webkit": "playwright test --project=webkit",
+    "test-ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.15.0",
+    "dotenv": "^16.4.5"
+  }
+}
