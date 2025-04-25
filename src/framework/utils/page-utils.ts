@@ -96,10 +96,10 @@ export class PageUtils {
 
   async getRole(role: string, options?: Parameters<Page['getByRole']>[1]) {
     const roleDescription = options?.name ? `${role}[name="${options.name}"]` : role;
-    log.debug(`🔍 正在获取元素: ${roleDescription}`);
+    log.info(`🔍 正在获取元素: ${roleDescription}`);
     try {
       const element = await this.page.getByRole(role as any, options);
-      log.debug(`✅ 获取元素成功: ${roleDescription}`);
+      log.elementSuccess(`✅ 获取元素成功: ${roleDescription}`);
       return element;
     } catch (error) {
       log.error(`❌ 获取元素失败: ${roleDescription}`, error);
@@ -231,7 +231,7 @@ export class PageUtils {
    */
   async getText(selector: string | Locator): Promise<string> {
     const selectorInfo = await this.getElementDescription(selector);
-    log.debug(`📖 正在获取元素文本: ${selectorInfo}`);
+    log.info(`📖 正在获取元素文本: ${selectorInfo}`);
     
     try {
       let text: string;
@@ -240,7 +240,7 @@ export class PageUtils {
       } else {
         text = await selector.innerText();
       }
-      log.debug(`✅ 获取元素文本成功: ${selectorInfo}, 文本: ${text}`);
+      log.elementSuccess(`✅ 获取元素文本成功: ${selectorInfo}, 文本: ${text}`);
       return text;
     } catch (error) {
       log.error(`❌ 获取元素文本失败: ${selectorInfo}`, error);
@@ -254,13 +254,13 @@ export class PageUtils {
    * @param arg 传递给函数的参数
    */
   async evaluate<R>(pageFunction: Function | string, arg?: any): Promise<R> {
-    log.debug(`🔄 正在执行JavaScript`);
+    log.info(`🔄 正在执行JavaScript`);
     const startTime = Date.now();
     
     try {
       const result = await this.page.evaluate(pageFunction as any, arg);
       const evalTime = Date.now() - startTime;
-      log.debug(`✅ JavaScript执行成功`);
+      log.elementSuccess(`✅ JavaScript执行成功`);
       log.performance('JS执行', evalTime);
       return result as R;
     } catch (error) {
