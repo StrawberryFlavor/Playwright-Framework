@@ -19,8 +19,9 @@ export const testConfig = {
   
   // 截图设置
   screenshot: {
-    enabled: true,
-    onFailure: true     // 失败时自动截图
+    enabled: true,      // 是否启用截图功能
+    onFailure: true,    // 失败时自动截图
+    directory: './screenshots'  // 截图保存目录
   },
   
   // 日志配置

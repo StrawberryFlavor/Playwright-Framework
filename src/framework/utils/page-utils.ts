@@ -1,14 +1,28 @@
 import { Page, Locator, ElementHandle, FrameLocator, LocatorScreenshotOptions } from '@playwright/test';
 import { log } from './logger';
+import path from 'path';
+import fs from 'fs';
+import { testConfig } from '../../../config/test.config';
 
 /**
  * 页面操作工具类，对Playwright的Page方法进行二次包装，增加日志等功能
  */
 export class PageUtils {
   private page: Page;
+  private screenshotDir: string;
+  private screenshotEnabled: boolean;
+  private screenshotOnFailure: boolean;
 
   constructor(page: Page) {
     this.page = page;
+    this.screenshotDir = path.resolve(process.cwd(), testConfig.screenshot.directory || 'screenshots');
+    this.screenshotEnabled = testConfig.screenshot.enabled !== false;
+    this.screenshotOnFailure = testConfig.screenshot.onFailure !== false;
+    
+    // 确保截图目录存在
+    if (this.screenshotEnabled && !fs.existsSync(this.screenshotDir)) {
+      fs.mkdirSync(this.screenshotDir, { recursive: true });
+    }
   }
 
   /**
@@ -16,6 +30,30 @@ export class PageUtils {
    */
   async logStep(message: string): Promise<void> {
     log.step(message);
+  }
+
+  /**
+   * 错误时自动截图
+   * @param error 错误对象
+   * @param operation 操作名称
+   */
+  private async captureErrorScreenshot(error: any, operation: string): Promise<string | null> {
+    if (!this.screenshotEnabled || !this.screenshotOnFailure) {
+      return null;
+    }
+    
+    try {
+      const timestamp = new Date().getTime();
+      const filename = `error_${operation}_${timestamp}.png`;
+      const filepath = path.join(this.screenshotDir, filename);
+      
+      await this.page.screenshot({ path: filepath });
+      log.info(`📸 错误截图保存至: ${filepath}`);
+      return filepath;
+    } catch (screenshotError) {
+      log.error('❌ 无法保存错误截图', screenshotError);
+      return null;
+    }
   }
 
   /**
@@ -89,6 +127,7 @@ export class PageUtils {
       log.performance('页面加载', loadTime);
       return response;
     } catch (error) {
+      await this.captureErrorScreenshot(error, 'goto');
       log.error(`❌ 页面加载失败: ${url}`, error);
       throw error;
     }
@@ -102,6 +141,7 @@ export class PageUtils {
       log.elementSuccess(`✅ 获取元素成功: ${roleDescription}`);
       return element;
     } catch (error) {
+      await this.captureErrorScreenshot(error, 'getRole');
       log.error(`❌ 获取元素失败: ${roleDescription}`, error);
       throw error;
     }
@@ -128,6 +168,7 @@ export class PageUtils {
       log.elementSuccess(`✅ 点击元素成功: ${selectorInfo}`);
       log.performance('元素点击', clickTime);
     } catch (error) {
+      await this.captureErrorScreenshot(error, 'click');
       log.error(`❌ 点击元素失败: ${selectorInfo}`, error);
       throw error;
     }
@@ -155,6 +196,7 @@ export class PageUtils {
       log.elementSuccess(`✅ 填充元素成功: ${selectorInfo}`);
       log.performance('表单填充', fillTime);
     } catch (error) {
+      await this.captureErrorScreenshot(error, 'fill');
       log.error(`❌ 填充元素失败: ${selectorInfo}`, error);
       throw error;
     }
@@ -165,15 +207,20 @@ export class PageUtils {
    * @param options 截图选项
    */
   async screenshot(options?: Parameters<Page['screenshot']>[0] & { name?: string }) {
+    if (!this.screenshotEnabled) {
+      log.info(`📸 截图功能已禁用`);
+      return null;
+    }
+    
     const name = options?.name || `screenshot-${Date.now()}`;
     log.info(`📸 正在截取页面截图: ${name}`);
     
     try {
-      const path = options?.path || `./screenshots/${name}.png`;
-      const finalOptions = { ...options, path };
+      const screenshotPath = options?.path || path.join(this.screenshotDir, `${name}.png`);
+      const finalOptions = { ...options, path: screenshotPath };
       await this.page.screenshot(finalOptions);
-      log.elementSuccess(`✅ 截图成功: ${path}`);
-      return path;
+      log.elementSuccess(`✅ 截图成功: ${screenshotPath}`);
+      return screenshotPath;
     } catch (error) {
       log.error(`❌ 截图失败`, error);
       throw error;
@@ -198,6 +245,7 @@ export class PageUtils {
       return element;
     } catch (error) {
       const waitTime = Date.now() - startTime;
+      await this.captureErrorScreenshot(error, 'waitForSelector');
       log.error(`❌ 等待元素超时: ${selector}, 已等待: ${waitTime}ms`, error);
       throw error;
     }
@@ -220,6 +268,7 @@ export class PageUtils {
       log.performance('页面状态等待', waitTime);
     } catch (error) {
       const waitTime = Date.now() - startTime;
+      await this.captureErrorScreenshot(error, 'waitForLoadState');
       log.error(`❌ 页面加载超时: ${stateType}, 已等待: ${waitTime}ms`, error);
       throw error;
     }
@@ -243,6 +292,7 @@ export class PageUtils {
       log.elementSuccess(`✅ 获取元素文本成功: ${selectorInfo}, 文本: ${text}`);
       return text;
     } catch (error) {
+      await this.captureErrorScreenshot(error, 'getText');
       log.error(`❌ 获取元素文本失败: ${selectorInfo}`, error);
       throw error;
     }
@@ -264,6 +314,7 @@ export class PageUtils {
       log.performance('JS执行', evalTime);
       return result as R;
     } catch (error) {
+      await this.captureErrorScreenshot(error, 'evaluate');
       log.error(`❌ JavaScript执行失败`, error);
       throw error;
     }
