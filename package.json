@@ -5,11 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "test-chrome": "playwright test --project=chrome",
+    "test-chrome": "playwright test --project=chromium",
     "test-firefox": "playwright test --project=firefox",
     "test-webkit": "playwright test --project=webkit",
     "test-ui": "playwright test --ui",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "test:quiet": "LOG_PRESET=quiet playwright test",
+    "test:verbose": "LOG_PRESET=verbose playwright test",
+    "test:dev": "LOG_PRESET=development playwright test",
+    "test:prod": "LOG_PRESET=production playwright test"
   },
   "keywords": [],
   "author": "",

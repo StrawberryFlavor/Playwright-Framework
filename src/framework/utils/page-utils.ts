@@ -71,7 +71,7 @@ export class PageUtils {
         await selector.click();
       }
       const clickTime = Date.now() - startTime;
-      log.info(`✅ 点击元素成功: ${selectorInfo}`);
+      log.elementSuccess(`✅ 点击元素成功: ${selectorInfo}`);
       log.performance('元素点击', clickTime);
     } catch (error) {
       log.error(`❌ 点击元素失败: ${selectorInfo}`, error);
@@ -92,7 +92,7 @@ export class PageUtils {
     try {
       await this.page.fill(selector, value, options);
       const fillTime = Date.now() - startTime;
-      log.info(`✅ 填充元素成功: ${selector}`);
+      log.elementSuccess(`✅ 填充元素成功: ${selector}`);
       log.performance('表单填充', fillTime);
     } catch (error) {
       log.error(`❌ 填充元素失败: ${selector}`, error);
@@ -112,7 +112,7 @@ export class PageUtils {
       const path = options?.path || `./screenshots/${name}.png`;
       const finalOptions = { ...options, path };
       await this.page.screenshot(finalOptions);
-      log.info(`✅ 截图成功: ${path}`);
+      log.elementSuccess(`✅ 截图成功: ${path}`);
       return path;
     } catch (error) {
       log.error(`❌ 截图失败`, error);
@@ -133,7 +133,7 @@ export class PageUtils {
     try {
       const element = await this.page.waitForSelector(selector, options);
       const waitTime = Date.now() - startTime;
-      log.info(`✅ 元素已出现: ${selector}, 等待时间: ${waitTime}ms`);
+      log.elementSuccess(`✅ 元素已出现: ${selector}, 等待时间: ${waitTime}ms`);
       log.performance('等待元素', waitTime);
       return element;
     } catch (error) {
@@ -156,7 +156,7 @@ export class PageUtils {
     try {
       await this.page.waitForLoadState(stateType, options);
       const waitTime = Date.now() - startTime;
-      log.info(`✅ 页面加载完成: ${stateType}, 等待时间: ${waitTime}ms`);
+      log.elementSuccess(`✅ 页面加载完成: ${stateType}, 等待时间: ${waitTime}ms`);
       log.performance('页面状态等待', waitTime);
     } catch (error) {
       const waitTime = Date.now() - startTime;

@@ -1,3 +1,5 @@
+import { LogLevel } from '../src/framework/utils/logger';
+
 /**
  * 测试配置
  */
@@ -19,5 +21,14 @@ export const testConfig = {
   screenshot: {
     enabled: true,
     onFailure: true     // 失败时自动截图
+  },
+  
+  // 日志配置
+  logger: {
+    level: LogLevel.INFO,
+    console: true,
+    file: true,
+    performance: false,
+    elementSuccess: false
   }
 }; 

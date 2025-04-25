@@ -6,7 +6,8 @@ export enum LogLevel {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
   WARN = 'WARN',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  NONE = 'NONE'
 }
 
 // 日志颜色映射
@@ -18,17 +19,42 @@ const LogColors = {
   RESET: '\x1b[0m'              // 重置颜色
 };
 
+// 日志配置
+export interface LogConfig {
+  // 日志级别
+  level: LogLevel;
+  // 是否输出到控制台
+  console: boolean;
+  // 是否输出到文件
+  file: boolean;
+  // 是否记录性能日志
+  performance: boolean;
+  // 是否打印元素操作的成功信息
+  elementSuccess: boolean;
+}
+
+// 默认日志配置
+export const defaultLogConfig: LogConfig = {
+  level: LogLevel.INFO,
+  console: true,
+  file: true,
+  performance: true,
+  elementSuccess: false
+};
+
 export class Logger {
   private logDir: string;
   private logFile: string;
   private testName: string;
+  private config: LogConfig;
 
-  constructor(testName: string = 'playwright') {
+  constructor(testName: string = 'playwright', config: Partial<LogConfig> = {}) {
     this.testName = testName;
+    this.config = { ...defaultLogConfig, ...config };
     this.logDir = path.resolve(process.cwd(), 'logs');
     
     // 确保日志目录存在
-    if (!fs.existsSync(this.logDir)) {
+    if (!fs.existsSync(this.logDir) && this.config.file) {
       fs.mkdirSync(this.logDir, { recursive: true });
     }
     
@@ -51,12 +77,27 @@ export class Logger {
   }
 
   /**
+   * 检查是否应该记录指定级别的日志
+   */
+  private shouldLog(level: LogLevel): boolean {
+    if (this.config.level === LogLevel.NONE) return false;
+    
+    const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
+    const configLevelIndex = levels.indexOf(this.config.level);
+    const currentLevelIndex = levels.indexOf(level);
+    
+    return currentLevelIndex >= configLevelIndex;
+  }
+
+  /**
    * 写入日志
    * @param level 日志级别
    * @param message 日志消息
    * @param data 额外数据
    */
   private log(level: LogLevel, message: string, data?: any): void {
+    if (!this.shouldLog(level)) return;
+    
     const timestamp = this.getTimeString();
     const logEntry = `[${timestamp}] [${level}] ${message}`;
     
@@ -66,13 +107,24 @@ export class Logger {
       : logEntry;
     
     // 控制台输出彩色日志
-    console.log(`${LogColors[level]}${logEntry}${LogColors.RESET}`);
-    if (data) {
-      console.log(data);
+    if (this.config.console) {
+      console.log(`${LogColors[level]}${logEntry}${LogColors.RESET}`);
+      if (data) {
+        console.log(data);
+      }
     }
     
     // 写入日志文件
-    fs.appendFileSync(this.logFile, fullLogEntry + '\n');
+    if (this.config.file) {
+      fs.appendFileSync(this.logFile, fullLogEntry + '\n');
+    }
+  }
+
+  /**
+   * 设置日志配置
+   */
+  setConfig(config: Partial<LogConfig>): void {
+    this.config = { ...this.config, ...config };
   }
 
   /**
@@ -114,7 +166,18 @@ export class Logger {
    * 记录性能信息
    */
   performance(action: string, timeMs: number): void {
-    this.info(`Performance [${action}]: ${timeMs}ms`);
+    if (this.config.performance) {
+      this.info(`Performance [${action}]: ${timeMs}ms`);
+    }
+  }
+
+  /**
+   * 记录成功的元素操作
+   */
+  elementSuccess(message: string): void {
+    if (this.config.elementSuccess) {
+      this.info(message);
+    }
   }
 
   /**
@@ -138,6 +201,8 @@ export const log = {
   error: (message: string, data?: any) => logger.error(message, data),
   step: (message: string) => logger.step(message),
   performance: (action: string, timeMs: number) => logger.performance(action, timeMs),
+  elementSuccess: (message: string) => logger.elementSuccess(message),
   api: (method: string, url: string, status?: number, responseTime?: number) => 
-    logger.api(method, url, status, responseTime)
+    logger.api(method, url, status, responseTime),
+  setConfig: (config: Partial<LogConfig>) => logger.setConfig(config)
 }; 
