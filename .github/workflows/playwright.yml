@@ -1,0 +1,88 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'playwright.config.*'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'package*.json'
+      - 'playwright.config.*'
+  schedule:
+    - cron: '0 0 * * 1-5'  # 工作日UTC 00:00运行
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: '要测试的浏览器 (all, chromium, firefox, webkit)'
+        required: true
+        default: 'all'
+      test_file:
+        description: '可选：特定测试文件路径'
+        required: false
+
+jobs:
+  test:
+    name: 运行Playwright测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: 设置Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: 安装依赖
+        run: npm ci
+        
+      - name: 安装Playwright浏览器
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+        
+      - name: 运行Playwright测试
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.browser == 'all' || github.event.inputs.browser == matrix.browser }}
+        run: |
+          mkdir -p test-results
+          if [ -n "${{ github.event.inputs.test_file }}" ]; then
+            LOG_PRESET=quiet npm run test-${{ matrix.browser }} -- ${{ github.event.inputs.test_file }}
+          else
+            LOG_PRESET=quiet npm run test-${{ matrix.browser }}
+          fi
+        
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 30
+          
+      - name: 上传错误截图
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: error-screenshots-${{ matrix.browser }}
+          path: screenshots/
+          retention-days: 30
+          
+      - name: 上传测试日志
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs-${{ matrix.browser }}
+          path: logs/
+          retention-days: 30 

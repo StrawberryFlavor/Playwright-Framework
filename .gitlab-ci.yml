@@ -1,0 +1,67 @@
+image: mcr.microsoft.com/playwright:v1.40.0-jammy
+
+stages:
+  - test
+  - report
+
+variables:
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .npm/
+    - node_modules/
+
+before_script:
+  - npm ci
+
+chromium:
+  stage: test
+  script:
+    - LOG_PRESET=quiet npm run test-chrome
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+      - screenshots/
+      - logs/
+    expire_in: 1 week
+
+firefox:
+  stage: test
+  script:
+    - LOG_PRESET=quiet npm run test-firefox
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+      - screenshots/
+      - logs/
+    expire_in: 1 week
+
+webkit:
+  stage: test
+  script:
+    - LOG_PRESET=quiet npm run test-webkit
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+      - screenshots/
+      - logs/
+    expire_in: 1 week
+
+generate_report:
+  stage: report
+  needs:
+    - chromium
+    - firefox
+    - webkit
+  script:
+    - npm run report
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+    expire_in: 1 month 

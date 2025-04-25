@@ -1,0 +1,58 @@
+pool:
+  vmImage: 'ubuntu-latest'
+
+trigger:
+  - master
+  - main
+
+strategy:
+  matrix:
+    chromium:
+      browser: 'chrome'
+    firefox:
+      browser: 'firefox'
+    webkit:
+      browser: 'webkit'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '18.x'
+    displayName: '安装 Node.js'
+
+  - script: npm ci
+    displayName: '安装依赖'
+
+  - script: npx playwright install --with-deps $(browser)
+    displayName: '安装 Playwright $(browser)'
+
+  - script: |
+      mkdir -p $(Build.ArtifactStagingDirectory)/playwright-report
+      mkdir -p $(Build.ArtifactStagingDirectory)/screenshots
+      mkdir -p $(Build.ArtifactStagingDirectory)/logs
+    displayName: '创建输出目录'
+
+  - script: LOG_PRESET=quiet npm run test-$(browser)
+    displayName: '运行 Playwright 测试 ($(browser))'
+    continueOnError: true
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: 'playwright-report/'
+      artifact: 'playwright-report-$(browser)'
+    displayName: '发布测试报告'
+    condition: always()
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: 'screenshots/'
+      artifact: 'error-screenshots-$(browser)'
+    displayName: '发布错误截图'
+    condition: always()
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: 'logs/'
+      artifact: 'test-logs-$(browser)'
+    displayName: '发布测试日志'
+    condition: always() 
