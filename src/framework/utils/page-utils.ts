@@ -19,6 +19,61 @@ export class PageUtils {
   }
 
   /**
+   * 获取元素的详细描述信息
+   * @param selector 元素选择器或Locator对象
+   * @returns 元素的详细描述
+   */
+  private async getElementDescription(selector: string | Locator): Promise<string> {
+    if (typeof selector === 'string') {
+      return selector;
+    }
+    
+    try {
+      // 尝试获取元素文本作为标识
+      const text = await selector.textContent() || '';
+      
+      // 尝试获取元素的属性
+      try {
+        const attr = await this.page.evaluate(el => {
+          return {
+            tagName: el.tagName?.toLowerCase() || '',
+            role: el.getAttribute('role') || '',
+            name: el.getAttribute('name') || '',
+            id: el.id || '',
+            className: el.className || '',
+            type: el.getAttribute('type') || '',
+            placeholder: el.getAttribute('placeholder') || ''
+          };
+        }, selector as any);
+        
+        // 构建更详细的选择器描述
+        if (text.trim()) {
+          return `"${text.trim().substring(0, 20)}${text.length > 20 ? '...' : ''}"`;
+        } else if (attr.placeholder) {
+          return `${attr.tagName}[placeholder="${attr.placeholder}"]`;
+        } else if (attr.role || attr.name) {
+          return `${attr.tagName}${attr.role ? `[role=${attr.role}]` : ''}${attr.name ? `[name=${attr.name}]` : ''}`;
+        } else if (attr.id) {
+          return `${attr.tagName}#${attr.id}`;
+        } else if (attr.className) {
+          return `${attr.tagName}.${attr.className.split(' ')[0]}`;
+        } else if (attr.type) {
+          return `${attr.tagName}[type=${attr.type}]`;
+        }
+      } catch (e) {
+        // 如果无法获取属性，尝试使用文本
+        if (text.trim()) {
+          return `"${text.trim().substring(0, 20)}${text.length > 20 ? '...' : ''}"`;
+        }
+      }
+    } catch (e) {
+      // 任何错误发生，都使用默认描述
+    }
+    
+    return 'Locator对象';
+  }
+
+  /**
    * 增强版的goto方法，添加日志
    * @param url 要访问的URL
    * @param options 原始goto方法的选项
@@ -40,13 +95,14 @@ export class PageUtils {
   }
 
   async getRole(role: string, options?: Parameters<Page['getByRole']>[1]) {
-    log.debug(`🔍 正在获取元素: ${role}`);
+    const roleDescription = options?.name ? `${role}[name="${options.name}"]` : role;
+    log.debug(`🔍 正在获取元素: ${roleDescription}`);
     try {
       const element = await this.page.getByRole(role as any, options);
-      log.debug(`✅ 获取元素成功: ${role}`);
+      log.debug(`✅ 获取元素成功: ${roleDescription}`);
       return element;
     } catch (error) {
-      log.error(`❌ 获取元素失败: ${role}`, error);
+      log.error(`❌ 获取元素失败: ${roleDescription}`, error);
       throw error;
     }
   }
@@ -56,9 +112,7 @@ export class PageUtils {
    * @param selector 要点击的元素选择器或Locator对象
    */
   async click(selector: string | Locator) {
-    const selectorInfo = typeof selector === 'string' 
-      ? selector 
-      : 'Locator对象';
+    const selectorInfo = await this.getElementDescription(selector);
     
     log.info(`👆 正在点击元素: ${selectorInfo}`);
     const startTime = Date.now();
@@ -81,21 +135,27 @@ export class PageUtils {
 
   /**
    * 增强版的fill方法，添加日志
-   * @param selector 要填充的元素选择器
+   * @param selector 要填充的元素选择器或Locator对象
    * @param value 要填充的值
    * @param options 填充选项
    */
-  async fill(selector: string, value: string, options?: Parameters<Page['fill']>[2]) {
-    log.info(`✏️ 正在填充元素: ${selector}, 值: ${value}`);
+  async fill(selector: string | Locator, value: string, options?: Parameters<Page['fill']>[2]) {
+    const selectorInfo = await this.getElementDescription(selector);
+    
+    log.info(`✏️ 正在填充元素: ${selectorInfo}, 值: ${value}`);
     const startTime = Date.now();
     
     try {
-      await this.page.fill(selector, value, options);
+      if (typeof selector === 'string') {
+        await this.page.fill(selector, value, options as any);
+      } else {
+        await selector.fill(value);
+      }
       const fillTime = Date.now() - startTime;
-      log.elementSuccess(`✅ 填充元素成功: ${selector}`);
+      log.elementSuccess(`✅ 填充元素成功: ${selectorInfo}`);
       log.performance('表单填充', fillTime);
     } catch (error) {
-      log.error(`❌ 填充元素失败: ${selector}`, error);
+      log.error(`❌ 填充元素失败: ${selectorInfo}`, error);
       throw error;
     }
   }
@@ -167,17 +227,23 @@ export class PageUtils {
 
   /**
    * 获取元素文本内容
-   * @param selector 元素选择器
+   * @param selector 元素选择器或Locator对象
    */
-  async getText(selector: string): Promise<string> {
-    log.debug(`📖 正在获取元素文本: ${selector}`);
+  async getText(selector: string | Locator): Promise<string> {
+    const selectorInfo = await this.getElementDescription(selector);
+    log.debug(`📖 正在获取元素文本: ${selectorInfo}`);
     
     try {
-      const text = await this.page.locator(selector).innerText();
-      log.debug(`✅ 获取元素文本成功: ${selector}, 文本: ${text}`);
+      let text: string;
+      if (typeof selector === 'string') {
+        text = await this.page.locator(selector).innerText();
+      } else {
+        text = await selector.innerText();
+      }
+      log.debug(`✅ 获取元素文本成功: ${selectorInfo}, 文本: ${text}`);
       return text;
     } catch (error) {
-      log.error(`❌ 获取元素文本失败: ${selector}`, error);
+      log.error(`❌ 获取元素文本失败: ${selectorInfo}`, error);
       throw error;
     }
   }
