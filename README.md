@@ -1,38 +1,32 @@
-# Playwright 测试自动化框架
+# Playwright 测试框架
 
-这是一个基于 Playwright 的测试自动化框架，提供了以下功能：
-
-- **页面对象模式（POM）**：使用结构化的方式管理和操作页面元素
-- **日志系统**：支持东八区时间的详细日志记录
-- **工具类封装**：对 Playwright 的基础方法进行了二次封装，增加了日志和错误处理
-- **可配置的测试环境**：通过环境变量支持多环境测试
+这是一个基于Playwright的自动化测试框架。
 
 ## 项目结构
 
 ```
-Playwright-Framework/
-├── framework/           # 框架核心
-│   └── utils/           # 工具类
-│       ├── logger.ts    # 日志工具
-│       └── page-utils.ts # 页面操作工具
-├── src/                 # 源代码
-│   └── pages/           # 页面对象
-│       └── playwright-home.ts # Playwright首页对象
-├── tests/               # 测试用例
-│   └── test_playwright/ # Playwright测试
-│       └── example.spec.ts # 测试示例
-├── playwright.config.ts # Playwright配置
-└── package.json         # 项目依赖
+/playwright-framework
+├── src/                   # 源代码目录
+│   ├── framework/         # 框架核心功能
+│   │   ├── utils/         # 工具类
+│   │   │   ├── logger.ts  # 日志工具
+│   │   │   └── page-utils.ts # 页面操作工具
+│   ├── pages/             # 页面对象
+│   │   └── playwright-home.ts # Playwright官网页面对象
+│   └── data/              # 测试数据
+├── tests/                 # 测试用例
+│   └── test_playwright/   # Playwright相关测试
+│       └── example.spec.ts # 示例测试用例
+├── config/                # 配置文件
+├── logs/                  # 日志输出
+├── playwright-report/     # 测试报告
+└── test-results/          # 测试结果
 ```
 
 ## 安装
 
 ```bash
-# 安装依赖
 npm install
-
-# 安装 Playwright 浏览器
-npx playwright install
 ```
 
 ## 运行测试
@@ -41,39 +35,34 @@ npx playwright install
 # 运行所有测试
 npm test
 
-# 运行指定测试
-npx playwright test tests/test_playwright/example.spec.ts
+# 运行Chrome浏览器测试
+npm run test-chrome
 
-# 使用 UI 模式运行
+# 运行Firefox浏览器测试
+npm run test-firefox
+
+# 运行Safari浏览器测试
+npm run test-webkit
+
+# 使用UI模式运行测试
 npm run test-ui
-```
 
-## 查看报告
-
-```bash
+# 查看测试报告
 npm run report
 ```
 
-## 主要特性
+## 框架特性
 
-### 1. 日志系统
+1. **页面对象模式**：使用Page Object Model设计模式，提高代码重用性和可维护性
+2. **工具类封装**：对Playwright API进行二次封装，增强日志和错误处理
+3. **日志系统**：详细的日志记录，包括性能监控、调试信息等
+4. **多浏览器支持**：支持Chrome、Firefox和Safari等主流浏览器
+5. **环境配置**：使用dotenv管理环境变量
+6. **测试报告**：生成详细的HTML测试报告
 
-- 支持多级别日志（DEBUG, INFO, WARN, ERROR）
-- 自动记录到文件，使用东八区时间戳
-- 控制台彩色输出
+## 开发指南
 
-### 2. 页面对象模式
-
-- 封装页面元素和操作
-- 提供链式调用API
-- 隔离测试逻辑和页面实现细节
-
-### 3. 工具类封装
-
-- 增强错误处理和日志记录
-- 自动记录操作时间和性能数据
-- 提供一致的API
-
-## 贡献
-
-欢迎提交问题和拉取请求。 
+1. 在src/pages下创建新的页面对象
+2. 在tests目录下创建对应的测试用例
+3. 使用src/framework/utils中的工具类来简化测试代码
+4. 运行测试并查看报告 

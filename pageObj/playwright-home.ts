@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { createPageUtils } from '../framework/utils/page-utils';
+import { createPageUtils } from '../src/framework/utils/page-utils';
 
 export class PlaywrightHome {
   private pageUtils;
@@ -17,4 +17,4 @@ export class PlaywrightHome {
     const element = await this.pageUtils.getRole('link', { name: 'Docs' });
     await this.pageUtils.click(element);
   }
-}
+} 
