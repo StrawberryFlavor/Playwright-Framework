@@ -108,15 +108,15 @@ export class Logger {
     
     // 控制台输出彩色日志
     if (this.config.console) {
-      console.log(`${LogColors[level]}${logEntry}${LogColors.RESET}`);
-      if (data) {
-        console.log(data);
+    console.log(`${LogColors[level]}${logEntry}${LogColors.RESET}`);
+    if (data) {
+      console.log(data);
       }
     }
     
     // 写入日志文件
     if (this.config.file) {
-      fs.appendFileSync(this.logFile, fullLogEntry + '\n');
+    fs.appendFileSync(this.logFile, fullLogEntry + '\n');
     }
   }
 
@@ -167,7 +167,7 @@ export class Logger {
    */
   performance(action: string, timeMs: number): void {
     if (this.config.performance) {
-      this.info(`Performance [${action}]: ${timeMs}ms`);
+    this.info(`Performance [${action}]: ${timeMs}ms`);
     }
   }
 

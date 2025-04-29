@@ -36,13 +36,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, firefox, webkit]
+        browser: [chromium, firefox, webkit]
         
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: 设置Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
@@ -51,16 +51,23 @@ jobs:
         run: npm install
         
       - name: 安装Playwright浏览器
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: npx playwright install --with-deps
         
       - name: 运行Playwright测试
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.browser == 'all' || github.event.inputs.browser == matrix.browser }}
         run: |
           mkdir -p test-results
-          if [ -n "${{ github.event.inputs.test_file }}" ]; then
-            npm run test-${{ matrix.browser }} -- ${{ github.event.inputs.test_file }}
+          # 将matrix.browser映射到package.json中的脚本名称
+          if [ "${{ matrix.browser }}" = "chromium" ]; then
+            script_name="test-chrome"
           else
-            npm run test-${{ matrix.browser }}
+            script_name="test-${{ matrix.browser }}"
+          fi
+          
+          if [ -n "${{ github.event.inputs.test_file }}" ]; then
+            npm run $script_name -- ${{ github.event.inputs.test_file }}
+          else
+            npm run $script_name
           fi
         
       - name: 上传测试报告
