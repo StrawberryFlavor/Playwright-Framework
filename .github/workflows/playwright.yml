@@ -55,6 +55,8 @@ jobs:
         
       - name: 运行Playwright测试
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.browser == 'all' || github.event.inputs.browser == matrix.browser }}
+        env:
+          BASE_URL: "https://playwright.dev"
         run: |
           mkdir -p test-results
           # 将matrix.browser映射到package.json中的脚本名称
