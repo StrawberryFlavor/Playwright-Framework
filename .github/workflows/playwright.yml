@@ -48,7 +48,7 @@ jobs:
           cache: 'npm'
           
       - name: 安装依赖
-        run: npm ci
+        run: npm install
         
       - name: 安装Playwright浏览器
         run: npx playwright install --with-deps ${{ matrix.browser }}
