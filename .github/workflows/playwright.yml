@@ -65,7 +65,7 @@ jobs:
         
       - name: 上传测试报告
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
@@ -73,7 +73,7 @@ jobs:
           
       - name: 上传错误截图
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: error-screenshots-${{ matrix.browser }}
           path: screenshots/
@@ -81,7 +81,7 @@ jobs:
           
       - name: 上传测试日志
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-logs-${{ matrix.browser }}
           path: logs/
