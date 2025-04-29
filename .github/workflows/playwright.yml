@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: [chrome, firefox, webkit]
         
     steps:
       - uses: actions/checkout@v3
@@ -58,9 +58,9 @@ jobs:
         run: |
           mkdir -p test-results
           if [ -n "${{ github.event.inputs.test_file }}" ]; then
-            LOG_PRESET=quiet npm run test-${{ matrix.browser }} -- ${{ github.event.inputs.test_file }}
+            npm run test-${{ matrix.browser }} -- ${{ github.event.inputs.test_file }}
           else
-            LOG_PRESET=quiet npm run test-${{ matrix.browser }}
+            npm run test-${{ matrix.browser }}
           fi
         
       - name: 上传测试报告
