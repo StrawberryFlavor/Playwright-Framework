@@ -137,7 +137,7 @@ logger: {
 
 ### 5. 页面对象模式
 
-使用Page Object Model设计模式，将页面元素和操作封装到类中：
+使用 Page Object Model 设计模式，将页面元素和操作封装到类中：
 
 ```typescript
 export class PlaywrightHome {
